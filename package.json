@@ -1,0 +1,15 @@
+{
+  "name": "learning-vanilla-js",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "workspaces": [
+    "section/*"
+  ],
+  "scripts": {
+    "dev:cra": "yarn workspace create-my-custom-react dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT"
+}
