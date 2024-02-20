@@ -10,7 +10,7 @@ yarn my-custom-react --info
 yarn my-custom-react --help
 ```
 
-## Creating an App
+## Requirements
 - **Node 14 버전 이상(Node > 14)** 이 필요합니다.
 - **Yarn 패키지**만 지원합니다.
 
