@@ -6,6 +6,8 @@ import packageJson from './package.json' assert { type: 'json' };
 import semver from 'semver';
 import fs from 'fs-extra'
 import inquirer from 'inquirer';
+import shelljs from 'shelljs';
+
 // ES 모듈에서 __filename, __dirname 사용하기 위한 방법
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -78,10 +80,10 @@ export async function init(){
     }
 
     // 최신버전 CRA 확인 (semver 설치)
-    // await checkVersion();
+    await checkVersion();
 
     // root 폴더 생성
-    // await mkdirRootDir(projectName);
+    await mkdirRootDir(projectName);
 
     // interactive CLI 제공 (inquirer 설치)
     inquirer
@@ -99,7 +101,61 @@ export async function init(){
             }
         ])
         .then(({language, formatting}) => {
+            if(formatting.toLowerCase() !== 'y' && formatting.toLowerCase() !== 'n'){
+                console.log(`Please enter ${chalk.red('y or n')}`)
+                process.exit(1);
+            }
+
             console.log({language, formatting})
+            const dependencies = ["react", "react-dom", "react-scripts"];
+
+
+            console.log('installing...');
+            shelljs.exec('npm init -y');
+            shelljs.exec(`npm install ${dependencies.reduce((acc, cur) => `${acc} ${cur}`)}`)
+            // TODO: 타입스크립트, eslint, prettier
+
+            // package.json 스크립트 수정
+            const packageObj = fs.readJsonSync('./package.json')
+            const newPackageObj = {
+                ...packageObj,
+                "scripts": {
+                    "start": "react-scripts start",
+                    "build": "react-scripts build",
+                    "test": "react-scripts test",
+                    "eject": "react-scripts eject"
+                },
+                "eslintConfig": {
+                    "extends": [
+                        "react-app",
+                    ]
+                },
+                "browserslist": {
+                    "production": [
+                        ">0.2%",
+                        "not dead",
+                        "not op_mini all"
+                    ],
+                    "development": [
+                        "last 1 chrome version",
+                        "last 1 firefox version",
+                        "last 1 safari version"
+                    ]
+                }
+            };
+
+
+            // fs.writeJsonSync('./package.json', newPackageObj) // NOTE: 한줄로 되는거 표시
+            fs.writeJsonSync('./package.json', newPackageObj, { spaces: 2 });
+
+
+            // 디렉토링
+            fs.mkdirsSync('src')
+            fs.mkdirsSync('src/components')
+            fs.mkdirsSync('src/pages')
+            fs.mkdirsSync('src/assets')
+
+            process.exit(0);
         })
 //     TODO: 작업중
 //      https://github.dev/facebook/create-react-app/blob/main/packages/react-scripts/scripts/init.js
@@ -108,6 +164,7 @@ export async function init(){
 
 function mkdirRootDir(projectName) {
     const projectPath = path.join(process.cwd(), projectName);
+    console.log('projectPath:',projectName, projectPath)
     if (fs.pathExistsSync(projectPath)){
         console.log(`The ${chalk.red(projectName)} Project already exist in the current directory.`)
         process.exit(1);
@@ -144,7 +201,7 @@ function addHelpText() {
 
 async function checkForLatestVersion() {
     // FIXME: npm 배포하면 패키지 주소 변경
-    const response = await fetch('https://registry.npmjs.org/-/package/create-react-app/dist-tags')
+    const response = await fetch('https://registry.npmjs.org/-/package/create-my-custom-react/dist-tags')
     if(response.status !== 200){
         throw new Error('api call error!')
     }
@@ -154,8 +211,9 @@ async function checkForLatestVersion() {
 
 function hasYarn(cwd = process.cwd()) {
     // cwd(Current working Directory)
-    // or "process.env.npm_config_user_agent"
-    return fs.pathExistsSync(path.resolve(cwd, 'yarn.lock'));
+    // or "process.env.npm_config_user_agent" => 패키지 사용에 따라 맨앞에 yarn 혹은 npm 위치
+    // return fs.pathExistsSync(path.resolve(cwd, 'yarn.lock'));
+    return (process.env.npm_config_user_agent || '').indexOf('yarn') === 0;
 }
 
 async function checkVersion() {
@@ -185,7 +243,7 @@ async function checkVersion() {
                     'Only Yarn package manager is allowed.'
                 )
             );
-            procexx.exit(1);
+            process.exit(1);
         }
 
         console.log('!!')
