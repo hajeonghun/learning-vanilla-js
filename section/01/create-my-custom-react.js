@@ -110,44 +110,13 @@ export async function init(){
             const dependencies = ["react", "react-dom", "react-scripts"];
 
 
-            console.log('installing...');
             shelljs.exec('npm init -y');
+            console.log(chalk.yellow('Installing...'));
             shelljs.exec(`npm install ${dependencies.reduce((acc, cur) => `${acc} ${cur}`)}`)
             // TODO: 타입스크립트, eslint, prettier
 
             // package.json 스크립트 수정
-            const packageObj = fs.readJsonSync('./package.json')
-            const newPackageObj = {
-                ...packageObj,
-                "scripts": {
-                    "start": "react-scripts start",
-                    "build": "react-scripts build",
-                    "test": "react-scripts test",
-                    "eject": "react-scripts eject"
-                },
-                "eslintConfig": {
-                    "extends": [
-                        "react-app",
-                    ]
-                },
-                "browserslist": {
-                    "production": [
-                        ">0.2%",
-                        "not dead",
-                        "not op_mini all"
-                    ],
-                    "development": [
-                        "last 1 chrome version",
-                        "last 1 firefox version",
-                        "last 1 safari version"
-                    ]
-                }
-            };
-
-
-            // fs.writeJsonSync('./package.json', newPackageObj) // NOTE: 한줄로 되는거 표시
-            fs.writeJsonSync('./package.json', newPackageObj, { spaces: 2 });
-
+            updatePackageJson();
 
             // 디렉토링
             fs.mkdirsSync('src')
@@ -197,6 +166,40 @@ function addHelpText() {
         'https://mysite.com/my-react-scripts-0.8.2.tar.gz'
     )}
     `
+}
+function updatePackageJson() {
+    console.log('packagejson cwd:', process.cwd());
+    const packageObj = fs.readJsonSync('package.json')
+    const newPackageObj = {
+        ...packageObj,
+        "scripts": {
+            "start": "react-scripts start",
+            "build": "react-scripts build",
+            "test": "react-scripts test",
+            "eject": "react-scripts eject"
+        },
+        "eslintConfig": {
+            "extends": [
+                "react-app",
+            ]
+        },
+        "browserslist": {
+            "production": [
+                ">0.2%",
+                "not dead",
+                "not op_mini all"
+            ],
+            "development": [
+                "last 1 chrome version",
+                "last 1 firefox version",
+                "last 1 safari version"
+            ]
+        }
+    };
+
+
+    // fs.writeJsonSync('package.json', newPackageObj) // NOTE: 한줄로 되는거 표시
+    fs.writeJsonSync('package.json', newPackageObj, { spaces: 2 });
 }
 
 async function checkForLatestVersion() {
