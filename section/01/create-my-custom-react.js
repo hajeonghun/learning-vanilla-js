@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { Command } from 'commander';
 import chalk from 'chalk'
 import envinfo from 'envinfo' // PC 정보
@@ -100,36 +99,62 @@ export async function init(){
                 message:'Does your project use Eslint+Prettier? (y/n)',
             }
         ])
-        .then(({language, formatting}) => {
+        .then(({ language, formatting }) => {
             if(formatting.toLowerCase() !== 'y' && formatting.toLowerCase() !== 'n'){
                 console.log(`Please enter ${chalk.red('y or n')}`)
                 process.exit(1);
             }
 
-            console.log({language, formatting})
-            const dependencies = ["react", "react-dom", "react-scripts"];
+            const isFormatting = formatting.toLowerCase() === 'y'
+            // package install
+            install({ language, isFormatting });
 
-
-            shelljs.exec('npm init -y');
-            console.log(chalk.yellow('Installing...'));
-            shelljs.exec(`npm install ${dependencies.reduce((acc, cur) => `${acc} ${cur}`)}`)
-            // TODO: 타입스크립트, eslint, prettier
+            // TODO: 의존성 설치 - tsconfig.json, eslint, prettier
+            setConfig({ language, isFormatting: formatting.toLowerCase() === 'y' })
 
             // package.json 스크립트 수정
             updatePackageJson();
 
-            // 디렉토링
-            fs.mkdirsSync('src')
-            fs.mkdirsSync('src/components')
-            fs.mkdirsSync('src/pages')
-            fs.mkdirsSync('src/assets')
+            // setting Dirs
+            makeDirectories();
 
+            // setting Files
+            makeFiles(language);
+
+            console.log(chalk.blue('Enjoy your project !!'))
             process.exit(0);
         })
 //     TODO: 작업중
 //      https://github.dev/facebook/create-react-app/blob/main/packages/react-scripts/scripts/init.js
 }
 
+function makeDirectories() {
+    fs.mkdirsSync('public')
+    fs.mkdirsSync('src')
+    fs.mkdirsSync('src/assets')
+}
+
+function install({ language, isFormatting }) {
+    const { dependencies, devDependencies } = getDependencies({ language, isFormatting });
+
+    shelljs.exec('npm init -y');
+    console.log(chalk.yellow('Installing...'));
+    shelljs.exec(`npm install ${dependencies.reduce((acc, cur) => `${acc} ${cur}`)}`);
+    shelljs.exec('npm --save-dev install @typescript-eslint/parser@latest');
+    shelljs.exec(`npm --save-dev install ${devDependencies.reduce((acc, cur) => `${acc} ${cur}`, '')}`);
+}
+
+function getDependencies({ language, isFormatting }) {
+    const dependencies = ["react", "react-dom", "react-scripts"];
+    const devDependencies = isFormatting ? ['prettier', 'eslint-config-prettier', 'eslint-plugin-prettier'] : [];
+
+    if(language === 'TypeScript'){
+        dependencies.push('typescript');
+        devDependencies.push('@types/react', '@types/react-dom', '@typescript-eslint/parser', '@typescript-eslint/eslint-plugin')
+    }
+
+    return { dependencies, devDependencies }
+}
 
 function mkdirRootDir(projectName) {
     const projectPath = path.join(process.cwd(), projectName);
@@ -168,7 +193,6 @@ function addHelpText() {
     `
 }
 function updatePackageJson() {
-    console.log('packagejson cwd:', process.cwd());
     const packageObj = fs.readJsonSync('package.json')
     const newPackageObj = {
         ...packageObj,
@@ -204,12 +228,14 @@ function updatePackageJson() {
 
 async function checkForLatestVersion() {
     // FIXME: npm 배포하면 패키지 주소 변경
-    const response = await fetch('https://registry.npmjs.org/-/package/create-my-custom-react/dist-tags')
-    if(response.status !== 200){
-        throw new Error('api call error!')
-    }
-    const json = await response.json();
-    return json.latest;
+    // const response = await fetch('https://registry.npmjs.org/-/package/create-my-custom-react/dist-tags')
+    // if(response.status !== 200){
+    //     throw new Error('api call error!')
+    // }
+    // const json = await response.json();
+    // return json.latest;
+
+    return '0.0.0'
 }
 
 function hasYarn(cwd = process.cwd()) {
@@ -239,16 +265,230 @@ async function checkVersion() {
         console.log();
         process.exit(1);
     } else{
-        // yarn 사용만 허용
-        if(!hasYarn()){
-            console.error(
-                chalk.yellow(
-                    'Only Yarn package manager is allowed.'
-                )
-            );
-            process.exit(1);
-        }
+        // yarn 사용 확인
+        // if(hasYarn()){
+        //     console.error(
+        //         chalk.yellow(
+        //             'Only Npm package manager is allowed.'
+        //         )
+        //     );
+        //     process.exit(1);
+        // }
 
-        console.log('!!')
+    }
+}
+
+function setConfig({ language, isFormatting }) {
+    if (language === 'TypeScript') {
+        fs.writeJsonSync('tsconfig.json', getTsConfigTemplate(), { spaces: 2 });
+    }
+
+    if (isFormatting) {
+        fs.writeJsonSync('.eslintrc', getEsLintTemplate(language), { spaces: 2 });
+        fs.writeJsonSync('.prettierrc', getPrettierTemplate(), { spaces: 2 });
+    }
+}
+
+function getTsConfigTemplate(){
+    return {
+        "compilerOptions": {
+            "target": "es5",
+            "lib": [
+                "dom",
+                "dom.iterable",
+                "esnext"
+            ],
+            "allowJs": true,
+            "skipLibCheck": true,
+            "esModuleInterop": true,
+            "allowSyntheticDefaultImports": true,
+            "strict": true,
+            "forceConsistentCasingInFileNames": true,
+            "noFallthroughCasesInSwitch": true,
+            "module": "esnext",
+            "moduleResolution": "node",
+            "resolveJsonModule": true,
+            "isolatedModules": true,
+            "noEmit": true,
+            "jsx": "react-jsx"
+        },
+        "include": [
+            "src"
+        ]
+    }
+}
+
+function getEsLintTemplate(language) {
+    if (language === 'JavaScript') {
+        return {
+            "extends": ["react-app", "plugin:prettier/recommended"],
+            "rules": {
+                "rules": {
+                    "prettier/prettier": "error",
+                }
+            }
+        }
+    }
+
+    if (language === 'TypeScript') {
+        return {
+            "extends": ["react-app", "prettier"],
+            "plugins": ["prettier", "@typescript-eslint"],
+            "parser": "@typescript-eslint/parser",
+            "parserOptions": {
+                "project": "./tsconfig.json"
+            },
+            "rules": {
+                "prettier/prettier": "error",
+            }
+        }
+    }
+}
+
+function getPrettierTemplate() {
+    return {
+        "trailingComma": "es5",
+        "tabWidth": 2,
+        "semi": false,
+        "singleQuote": true
+    }
+}
+
+function makeFiles(language) {
+    const { indexHtml, index, indexCss, App, AppCss } = getFilesTemplate();
+    fs.writeFileSync('public/index.html', indexHtml);
+    fs.writeFileSync('src/index.css', indexCss);
+    fs.writeFileSync('src/App.css', AppCss);
+
+    const extension = language === 'JavaScript' ? 'jsx' : 'tsx';
+    fs.writeFileSync(`src/index.${extension}`, index);
+    fs.writeFileSync(`src/App.${extension}`, App);
+}
+
+function getFilesTemplate(){
+    const indexHtml = `
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#000000" />
+        <meta
+          name="description"
+          content="Web site created using create-react-app"
+        />
+        <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    
+        <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+        <title>React App</title>
+      </head>
+      <body>
+        <noscript>You need to enable JavaScript to run this app.</noscript>
+        <div id="root"></div>
+      </body>
+    </html>
+`;
+    const index = `
+    import React from 'react';
+    import ReactDOM from 'react-dom/client';
+    import './index.css';
+    import App from './App';
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+`;
+    const indexCss = `
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    code {
+      font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+        monospace;
+    }
+`;
+    const App = `
+    import './App.css';
+
+    function App() {
+      return (
+        <div className="App">
+          <header className="App-header">
+            <p>
+              Edit <code>src/App.js</code> and save to reload.
+            </p>
+            <a
+              className="App-link"
+              href="https://reactjs.org"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Learn React
+            </a>
+          </header>
+        </div>
+      );
+    }
+    
+    export default App;
+`;
+
+    const AppCss = `
+    .App {
+      text-align: center;
+    }
+    
+    .App-logo {
+      height: 40vmin;
+      pointer-events: none;
+    }
+    
+    @media (prefers-reduced-motion: no-preference) {
+      .App-logo {
+        animation: App-logo-spin infinite 20s linear;
+      }
+    }
+    
+    .App-header {
+      background-color: #282c34;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: calc(10px + 2vmin);
+      color: white;
+    }
+    
+    .App-link {
+      color: #61dafb;
+    }
+    
+    @keyframes App-logo-spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+`;
+
+    return {
+        indexHtml,
+        index,
+        indexCss,
+        App,
+        AppCss
     }
 }
