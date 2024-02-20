@@ -5,6 +5,7 @@ import envinfo from 'envinfo' // PC 정보
 import packageJson from './package.json' assert { type: 'json' };
 import semver from 'semver';
 import fs from 'fs-extra'
+import inquirer from 'inquirer';
 // ES 모듈에서 __filename, __dirname 사용하기 위한 방법
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -13,7 +14,7 @@ const __filename = fileURLToPath(import.meta.url); // get the resolved path to t
 const __dirname = path.dirname(__filename); // get the name of the directory
 let projectName;
 
-async function init(){
+export async function init(){
     const program = new Command(packageJson.name)
         .version(packageJson.version, '-v, --version')
         .arguments('[project-directory]')
@@ -77,14 +78,46 @@ async function init(){
     }
 
     // 최신버전 CRA 확인 (semver 설치)
-    await checkVersion();
+    // await checkVersion();
 
+    // root 폴더 생성
+    // await mkdirRootDir(projectName);
+
+    // interactive CLI 제공 (inquirer 설치)
+    inquirer
+        .prompt([
+            {
+                type: 'list',
+                name: 'language',
+                message:'Select the language',
+                choices: ['JavaScript', 'TypeScript']
+            },
+            {
+                type: 'input',
+                name: 'formatting',
+                message:'Does your project use Eslint+Prettier? (y/n)',
+            }
+        ])
+        .then(({language, formatting}) => {
+            console.log({language, formatting})
+        })
 //     TODO: 작업중
 //      https://github.dev/facebook/create-react-app/blob/main/packages/react-scripts/scripts/init.js
 }
 
-init()
 
+function mkdirRootDir(projectName) {
+    const projectPath = path.join(process.cwd(), projectName);
+    if (fs.pathExistsSync(projectPath)){
+        console.log(`The ${chalk.red(projectName)} Project already exist in the current directory.`)
+        process.exit(1);
+    }
+
+    console.log('이동 전 process.cwd()',process.cwd())
+    fs.mkdirsSync(projectPath); // root 폴더 생성
+    process.chdir(projectPath); // 현재 작업경로 이동
+    console.log('이동 후 process.cwd()',process.cwd())
+}
 
 
 function addHelpText() {
@@ -120,10 +153,13 @@ async function checkForLatestVersion() {
 }
 
 function hasYarn(cwd = process.cwd()) {
+    // cwd(Current working Directory)
+    // or "process.env.npm_config_user_agent"
     return fs.pathExistsSync(path.resolve(cwd, 'yarn.lock'));
 }
 
 async function checkVersion() {
+
     const latestVersion = await checkForLatestVersion();
     console.log({latestVersion})
     if (semver.lt(packageJson.version,latestVersion)) {
