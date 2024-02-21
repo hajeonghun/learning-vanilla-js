@@ -126,9 +126,9 @@ export async function init(){
 
             // NOTE: custom template (언어에 따라)
             // shelljs.exec('npm init -y')
-            // shelljs.exec('npm install -D cra-template')
-            // fs.copySync('node_modules/cra-template/template', './', { recursive: true })
-            // shelljs.exec('npm uninstall -D cra-template')
+            // shelljs.exec('npm install -D @hajeonghun/custom-template')
+            // fs.copySync('node_modules/@hajeonghun/custom-template/template', './', { recursive: true })
+            // shelljs.exec('npm uninstall -D @hajeonghun/custom-template')
 
             console.log(chalk.blue('Enjoy your project !!'))
             process.exit(0);
