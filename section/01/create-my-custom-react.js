@@ -16,13 +16,16 @@ const __dirname = path.dirname(__filename); // get the name of the directory
 let projectName;
 
 export async function init(){
+    // const command = process.argv[2];
+    // const options = process.argv[3];
+
     const program = new Command(packageJson.name)
+        .usage(`${chalk.green('<project-directory>')} [options]`)
         .version(packageJson.version, '-v, --version')
         .arguments('[project-directory]')
-        .usage(`${chalk.green('<project-directory>')} [options]`)
         .option('--info', 'print environment debug info')
-        .action((name) => {
-            console.log({name})
+        .action((name, options) => {
+            console.log({name, options})
             projectName = name;
         })
         .addHelpText('after', addHelpText())
@@ -78,7 +81,7 @@ export async function init(){
         process.exit(1);
     }
 
-    // 최신버전 CRA 확인 (semver 설치)
+    // 최신버전 CRA 확인 (semver 설치) - npx create-react-app 사용 이유
     await checkVersion();
 
     // root 폴더 생성
@@ -109,8 +112,8 @@ export async function init(){
             // package install
             install({ language, isFormatting });
 
-            // TODO: 의존성 설치 - tsconfig.json, eslint, prettier
-            setConfig({ language, isFormatting: formatting.toLowerCase() === 'y' })
+            // setting config
+            settingConfig({ language, isFormatting: formatting.toLowerCase() === 'y' })
 
             // package.json 스크립트 수정
             updatePackageJson();
@@ -121,11 +124,15 @@ export async function init(){
             // setting Files
             makeFiles(language);
 
+            // NOTE: custom template (언어에 따라)
+            // shelljs.exec('npm init -y')
+            // shelljs.exec('npm install -D cra-template')
+            // fs.copySync('node_modules/cra-template/template', './', { recursive: true })
+            // shelljs.exec('npm uninstall -D cra-template')
+
             console.log(chalk.blue('Enjoy your project !!'))
             process.exit(0);
         })
-//     TODO: 작업중
-//      https://github.dev/facebook/create-react-app/blob/main/packages/react-scripts/scripts/init.js
 }
 
 function makeDirectories() {
@@ -140,7 +147,7 @@ function install({ language, isFormatting }) {
     shelljs.exec('npm init -y');
     console.log(chalk.yellow('Installing...'));
     shelljs.exec(`npm install ${dependencies.reduce((acc, cur) => `${acc} ${cur}`)}`);
-    shelljs.exec('npm --save-dev install @typescript-eslint/parser@latest');
+    shelljs.exec('npm --save-dev install @typescript-eslint/parser@latest'); // NOTE: npm ERR! Found: @typescript-eslint/eslint-plugin@5.62.0
     shelljs.exec(`npm --save-dev install ${devDependencies.reduce((acc, cur) => `${acc} ${cur}`, '')}`);
 }
 
@@ -161,6 +168,8 @@ function mkdirRootDir(projectName) {
     console.log('projectPath:',projectName, projectPath)
     if (fs.pathExistsSync(projectPath)){
         console.log(`The ${chalk.red(projectName)} Project already exist in the current directory.`)
+        // console.log(fs.readdirSync(projectPath)) // NOTE: 폴더내 목록
+        // fs.readdirSync(projectPath).forEach(file => console.log(file === 'node_modules' ? chalk.green(file) : file)) // NOTE: 폴더내 목록 나열
         process.exit(1);
     }
 
@@ -240,9 +249,9 @@ async function checkForLatestVersion() {
 
 function hasYarn(cwd = process.cwd()) {
     // cwd(Current working Directory)
-    // or "process.env.npm_config_user_agent" => 패키지 사용에 따라 맨앞에 yarn 혹은 npm 위치
-    // return fs.pathExistsSync(path.resolve(cwd, 'yarn.lock'));
+
     return (process.env.npm_config_user_agent || '').indexOf('yarn') === 0;
+    // or fs.pathExistsSync(path.resolve(cwd, 'yarn.lock'));
 }
 
 async function checkVersion() {
@@ -264,22 +273,23 @@ async function checkVersion() {
         );
         console.log();
         process.exit(1);
-    } else{
-        // yarn 사용 확인
-        // if(hasYarn()){
-        //     console.error(
-        //         chalk.yellow(
-        //             'Only Npm package manager is allowed.'
-        //         )
-        //     );
-        //     process.exit(1);
-        // }
-
     }
+
+    // yarn 사용 확인
+    // if(hasYarn()){
+    //     console.error(
+    //         chalk.yellow(
+    //             'Only Npm package manager is allowed.'
+    //         )
+    //     );
+    //     process.exit(1);
+    // }
+
 }
 
-function setConfig({ language, isFormatting }) {
+function settingConfig({ language, isFormatting }) {
     if (language === 'TypeScript') {
+        // NOTE: 한줄로 되는거 표시
         fs.writeJsonSync('tsconfig.json', getTsConfigTemplate(), { spaces: 2 });
     }
 
@@ -323,9 +333,7 @@ function getEsLintTemplate(language) {
         return {
             "extends": ["react-app", "plugin:prettier/recommended"],
             "rules": {
-                "rules": {
-                    "prettier/prettier": "error",
-                }
+                "prettier/prettier": "error",
             }
         }
     }
@@ -333,7 +341,7 @@ function getEsLintTemplate(language) {
     if (language === 'TypeScript') {
         return {
             "extends": ["react-app", "prettier"],
-            "plugins": ["prettier", "@typescript-eslint"],
+            "plugins": ["prettier"],
             "parser": "@typescript-eslint/parser",
             "parserOptions": {
                 "project": "./tsconfig.json"
@@ -355,7 +363,7 @@ function getPrettierTemplate() {
 }
 
 function makeFiles(language) {
-    const { indexHtml, index, indexCss, App, AppCss } = getFilesTemplate();
+    const { indexHtml, index, indexCss, App, AppCss } = getFilesTemplate(language);
     fs.writeFileSync('public/index.html', indexHtml);
     fs.writeFileSync('src/index.css', indexCss);
     fs.writeFileSync('src/App.css', AppCss);
@@ -365,7 +373,7 @@ function makeFiles(language) {
     fs.writeFileSync(`src/App.${extension}`, App);
 }
 
-function getFilesTemplate(){
+function getFilesTemplate(language){
     const indexHtml = `
     <!DOCTYPE html>
     <html lang="en">
@@ -389,18 +397,17 @@ function getFilesTemplate(){
       </body>
     </html>
 `;
-    const index = `
-    import React from 'react';
-    import ReactDOM from 'react-dom/client';
-    import './index.css';
-    import App from './App';
+    const index = `import React from 'react'
+import ReactDOM from 'react-dom/client'
+import './index.css'
+import App from './App'
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
-    );
+const root = ReactDOM.createRoot(document.getElementById('root')${language === 'JavaScript' ? '' : ' as HTMLDivElement'})
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+)
 `;
     const indexCss = `
     body {
@@ -417,30 +424,27 @@ function getFilesTemplate(){
         monospace;
     }
 `;
-    const App = `
-    import './App.css';
+    const App = `import './App.css'
 
-    function App() {
-      return (
-        <div className="App">
-          <header className="App-header">
-            <p>
-              Edit <code>src/App.js</code> and save to reload.
-            </p>
-            <a
-              className="App-link"
-              href="https://reactjs.org"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learn React
-            </a>
-          </header>
-        </div>
-      );
-    }
-    
-    export default App;
+function App() {
+  return (
+    <div className="App">
+      <header className="App-header">
+        <h1>My Custom React App.(${language})</h1>
+        <a
+          className="App-link"
+          href="https://reactjs.org"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Learn React
+        </a>
+      </header>
+    </div>
+  )
+}
+
+export default App
 `;
 
     const AppCss = `
