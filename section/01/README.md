@@ -15,7 +15,7 @@
 - -v, --version 옵션 > CLI 버전 조회
 - --info 옵션 > Environment Info 조회
 - -h, --help 옵션 > 도움말 정보 추가
-- create-my-custom-react <project-directory> 입력시, project-directory 명으로 현재위치에 생성
+- create-my-custom-react \<project-directory\> 입력시, project-directory 명으로 현재위치에 생성
   - project-directory 미입력시, 안내문구 출력 및 CLI 종료
 - JavaScript, TypesScript 중에 선택가능
 - eslint, prettier 설정 선택가능
