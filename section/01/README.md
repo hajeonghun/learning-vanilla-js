@@ -12,7 +12,7 @@
 - Node 14 버전 이상만 허용
 - Yarn 사용중인지 체크
 - 최신 버전의 create-my-custom-react 만 실행되도록 허용
-- -v, --v 옵션 > CLI 버전 조회
+- -v, --version 옵션 > CLI 버전 조회
 - --info 옵션 > Environment Info 조회
 - -h, --help 옵션 > 도움말 정보 추가
 - create-my-custom-react <project-directory> 입력시, project-directory 명으로 현재위치에 생성
