@@ -129,8 +129,8 @@ export async function init(){
 
             // NOTE: custom template (언어에 따라)
             // shelljs.exec('npm init -y')
-            // shelljs.exec('npm install -D @hajeonghun/custom-template/js(or ts)')
-            // fs.copySync('node_modules/@hajeonghun/custom-template/template', './', { recursive: true })
+            // shelljs.exec('npm install -D @hajeonghun/custom-template')
+            // fs.copySync(`node_modules/@hajeonghun/custom-template/template/${language.toLowerCase()}`, './', { recursive: true })
             // shelljs.exec('npm uninstall -D @hajeonghun/custom-template')
 
             console.log(chalk.blue('Enjoy your project !!'))
@@ -253,12 +253,12 @@ function updatePackageJson() {
 
 async function checkForLatestVersion() {
     // FIXME: npm 배포하면 패키지 주소 변경
-    const response = await fetch('https://registry.npmjs.org/-/package/create-my-custom-react/dist-tags')
-    if(response.status !== 200){
-        throw new Error('api call error!')
-    }
-    const json = await response.json();
-    return json.latest;
+    // const response = await fetch('https://registry.npmjs.org/-/package/create-my-custom-react/dist-tags')
+    // if(response.status !== 200){
+    //     throw new Error('api call error!')
+    // }
+    // const json = await response.json();
+    // return json.latest;
 
     return '0.0.0'
 }
