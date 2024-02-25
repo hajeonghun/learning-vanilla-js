@@ -162,7 +162,7 @@ function install({ language, isFormatting }) {
 
     shelljs.exec('npm init -y');
     console.log(chalk.yellow('Installing...'));
-    shelljs.exec(`npm install ${dependencies.reduce((acc, cur) => `${acc} ${cur}`)}`);
+    shelljs.exec(`npm --save install ${dependencies.reduce((acc, cur) => `${acc} ${cur}`)}`);
     shelljs.exec('npm --save-dev install @typescript-eslint/parser@latest'); // NOTE: npm ERR! Found: @typescript-eslint/eslint-plugin@5.62.0
     shelljs.exec(`npm --save-dev install ${devDependencies.reduce((acc, cur) => `${acc} ${cur}`, '')}`);
 }
