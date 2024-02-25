@@ -81,8 +81,11 @@ export async function init(){
         process.exit(1);
     }
 
-    // 최신버전 CRA 확인 (semver 설치) - npx create-react-app 사용 이유
+    // 최신버전 CLI 확인 (semver 설치) - npx create-react-app 사용 이유
     await checkVersion();
+
+    // 패키지 매니저 확인
+    checkPackageManager();
 
     // root 폴더 생성
     await mkdirRootDir(projectName);
@@ -109,14 +112,14 @@ export async function init(){
             }
 
             const isFormatting = formatting.toLowerCase() === 'y'
-            // package install
+            // install package
             install({ language, isFormatting });
+
+            // update package.json
+            updatePackageJson();
 
             // setting config
             settingConfig({ language, isFormatting: formatting.toLowerCase() === 'y' })
-
-            // package.json 스크립트 수정
-            updatePackageJson();
 
             // setting Dirs
             makeDirectories();
@@ -126,7 +129,7 @@ export async function init(){
 
             // NOTE: custom template (언어에 따라)
             // shelljs.exec('npm init -y')
-            // shelljs.exec('npm install -D @hajeonghun/custom-template')
+            // shelljs.exec('npm install -D @hajeonghun/custom-template/js(or ts)')
             // fs.copySync('node_modules/@hajeonghun/custom-template/template', './', { recursive: true })
             // shelljs.exec('npm uninstall -D @hajeonghun/custom-template')
 
@@ -138,11 +141,24 @@ export async function init(){
 function makeDirectories() {
     fs.mkdirsSync('public')
     fs.mkdirsSync('src')
-    fs.mkdirsSync('src/assets')
 }
 
 function install({ language, isFormatting }) {
     const { dependencies, devDependencies } = getDependencies({ language, isFormatting });
+
+    // NOTE: child_process 이용하는 예제
+    // import { exec } from 'child_process';
+    //
+    // const child = exec('npm install shelljs');
+    // // 결과물 출력
+    // child.stdout.on('data', function (data) {
+    //     console.log('stdout :', data);
+    // });
+    //
+    // // 에러 출력
+    // child.stderr.on('data', function (error) {
+    //     console.error('stderr: ',error);
+    // });
 
     shelljs.exec('npm init -y');
     console.log(chalk.yellow('Installing...'));
@@ -169,7 +185,7 @@ function mkdirRootDir(projectName) {
     if (fs.pathExistsSync(projectPath)){
         console.log(`The ${chalk.red(projectName)} Project already exist in the current directory.`)
         // console.log(fs.readdirSync(projectPath)) // NOTE: 폴더내 목록
-        // fs.readdirSync(projectPath).forEach(file => console.log(file === 'node_modules' ? chalk.green(file) : file)) // NOTE: 폴더내 목록 나열
+        fs.readdirSync(projectPath).forEach(file => console.log(file === 'node_modules' ? chalk.green(file) : file)) // NOTE: 폴더내 목록 나열
         process.exit(1);
     }
 
@@ -237,22 +253,17 @@ function updatePackageJson() {
 
 async function checkForLatestVersion() {
     // FIXME: npm 배포하면 패키지 주소 변경
-    // const response = await fetch('https://registry.npmjs.org/-/package/create-my-custom-react/dist-tags')
-    // if(response.status !== 200){
-    //     throw new Error('api call error!')
-    // }
-    // const json = await response.json();
-    // return json.latest;
+    const response = await fetch('https://registry.npmjs.org/-/package/create-my-custom-react/dist-tags')
+    if(response.status !== 200){
+        throw new Error('api call error!')
+    }
+    const json = await response.json();
+    return json.latest;
 
     return '0.0.0'
 }
 
-function hasYarn(cwd = process.cwd()) {
-    // cwd(Current working Directory)
 
-    return (process.env.npm_config_user_agent || '').indexOf('yarn') === 0;
-    // or fs.pathExistsSync(path.resolve(cwd, 'yarn.lock'));
-}
 
 async function checkVersion() {
 
@@ -262,29 +273,32 @@ async function checkVersion() {
         console.log();
         console.error(
             chalk.yellow(
-                `You are running \`create-react-app\` ${packageJson.version}, which is behind the latest release (${latestVersion}).\n\n` +
-                'We recommend always using the latest version of create-react-app if possible.'
+                `You are running \`create-my-custom-react\` ${packageJson.version}, which is behind the latest release (${latestVersion}).\n\n` +
+                'We recommend always using the latest version of create-my-custom-react if possible.'
             )
         );
-        console.log();
-        console.log(
-            'The latest instructions for creating a new app can be found here:\n' +
-            'https://create-react-app.dev/docs/getting-started/'
-        );
-        console.log();
         process.exit(1);
     }
 
-    // yarn 사용 확인
-    // if(hasYarn()){
-    //     console.error(
-    //         chalk.yellow(
-    //             'Only Npm package manager is allowed.'
-    //         )
-    //     );
-    //     process.exit(1);
-    // }
 
+}
+
+function checkPackageManager() {
+    // yarn 사용 확인
+    if(hasYarn()){
+        console.error(
+            chalk.yellow(
+                'Only Npm package manager is allowed.'
+            )
+        );
+    }
+}
+
+function hasYarn(cwd = process.cwd()) {
+    // cwd(Current working Directory)
+
+    return (process.env.npm_config_user_agent || '').indexOf('yarn') === 0;
+    // or fs.pathExistsSync(path.resolve(cwd, 'yarn.lock'));
 }
 
 function settingConfig({ language, isFormatting }) {
@@ -363,14 +377,14 @@ function getPrettierTemplate() {
 }
 
 function makeFiles(language) {
-    const { indexHtml, index, indexCss, App, AppCss } = getFilesTemplate(language);
+    const { indexHtml, index, indexCss, app, appCss } = getFilesTemplate(language);
     fs.writeFileSync('public/index.html', indexHtml);
     fs.writeFileSync('src/index.css', indexCss);
-    fs.writeFileSync('src/App.css', AppCss);
+    fs.writeFileSync('src/App.css', appCss);
 
     const extension = language === 'JavaScript' ? 'jsx' : 'tsx';
     fs.writeFileSync(`src/index.${extension}`, index);
-    fs.writeFileSync(`src/App.${extension}`, App);
+    fs.writeFileSync(`src/App.${extension}`, app);
 }
 
 function getFilesTemplate(language){
@@ -424,7 +438,7 @@ root.render(
         monospace;
     }
 `;
-    const App = `import './App.css'
+    const app = `import './App.css'
 
 function App() {
   return (
@@ -447,7 +461,7 @@ function App() {
 export default App
 `;
 
-    const AppCss = `
+    const appCss = `
     .App {
       text-align: center;
     }
@@ -492,7 +506,7 @@ export default App
         indexHtml,
         index,
         indexCss,
-        App,
-        AppCss
+        app,
+        appCss
     }
 }
