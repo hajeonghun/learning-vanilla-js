@@ -1,0 +1,9 @@
+{
+  "name": "@hajeonghun/mono-math",
+  "version": "1.0.0",
+  "main": "library/index.js",
+  "files": [
+    "library"
+  ],
+  "license": "MIT"
+}
