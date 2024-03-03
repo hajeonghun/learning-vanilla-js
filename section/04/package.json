@@ -1,0 +1,13 @@
+{
+  "name": "04",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "http-server --proxy=http://127.0.0.1:8080/?"
+  },
+  "dependencies": {
+    "http-server": "^14.1.1"
+  }
+}
