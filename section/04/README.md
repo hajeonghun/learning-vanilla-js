@@ -9,31 +9,7 @@
 - CSR 방식으로 간단한 페이지 구현해보기
   - 링크 이동 => history
   - router 등록 => proxy
-
-
-
-
-
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-
-
-
-
-
-
+  
 ## CSR 이란?
 - 브라우저 렌더링이 클라이언트(=브라우저) 측에서 이루어 짐
     
@@ -57,3 +33,17 @@
 > <span style="color:red">CSR 과 SPA 는 비교 대상이 아님</span>
 - CSR 은 렌더링이 어느 사이드에서 일어나냐의 관점에서의 용어
 - SPA 는 페이지 개수의 관점
+  
+## Module Script VS Script
+- Module Script
+  - 엄격모드(strict mode)에서 실행
+    - 최상위 this 객체 undefined
+    - 선언하지 않은 변수는 사용 불가 등
+  - defer 처럼 지연실행
+  - DOM 조작 가능
+  - import / export 사용 가능
+- Script
+  - 최상위 this 객체에 전역객체(window) 바인딩
+  - 선언하지 않은 변수 사용 가능
+  - 선언 위치에 따라 DOM 접근 가능/불가능
+  - import / export 사용 불가능
