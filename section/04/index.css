@@ -1,0 +1,29 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    justify-content: center;
+    align-items: center;
+}
+
+.header {
+    font-size: 2rem;
+    border-radius: 1rem 1rem 0 0;
+    height: 30px;
+    width: 514px;
+    display: flex;
+}
+
+.header button {
+    flex-grow: 1;
+}
+
+.content {
+    padding: 2rem;
+    font-size: 2rem;
+    border-radius: 0 0 1rem 1rem;
+    border: 1px solid gray;
+    height: 500px;
+    width: 450px;
+    /*overflow-y: auto;*/
+}

@@ -1,21 +1,16 @@
 
-export let router = {};
-
 function createBrowserRouter(routes) {
-    window.addEventListener('popstate', (event) => {
-        console.log('location:', location.pathname)
-        router.push(location.pathname)
-    })
 
     const routesObject = routes.reduce((acc, { path, element }) => {
         acc[path] = element;
         return acc;
     }, {});
-
-    return new Proxy(routesObject, {
+console.log({routesObject})
+    const newRouter = new Proxy(routesObject, {
         get(target, prop){
             if (prop === 'push' ){
                 return (path) => {
+                    console.log({target, path})
                     document.querySelector('#root').innerHTML = target[path]();
                     history.pushState({},'', path)
                 }
@@ -24,7 +19,14 @@ function createBrowserRouter(routes) {
         set(target, prop, value){
             return false
         }
+    });
+    window.addEventListener('popstate', (event) => {
+        console.log('location:', location.pathname)
+        newRouter.push(location.pathname)
     })
+
+    return newRouter;
+
 }
 
 function Home() {
@@ -37,8 +39,8 @@ function Login() {
         <h1>로그인</h1>
     `
 }
-function render() {
-    router = createBrowserRouter([
+function main() {
+    const router = createBrowserRouter([
         {
             path: '/',
             element: Home
@@ -53,9 +55,7 @@ function render() {
     setTimeout(() => router.push('/login'), 3000)
 }
 
-window.onload = function(){
-    render();
-}
+main();
 
 
 //var express = require('express');
