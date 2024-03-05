@@ -1,4 +1,11 @@
-
+/**
+ * TODO
+ *  1. 라우터 등록
+ *  2. 컴포넌트 작성 (Home, Board)
+ *  3. #root에 현재 페이지에 대한 화면 그리기 (render 함수)
+ *  4. 페이지 이동 이벤트 등록하기 (History API)
+ *  5. 게시물 추가/삭제 버튼 추가 및 이벤트 등록
+ */
 let router = [];
 
 const boardList = [
@@ -21,7 +28,7 @@ function render() {
         return acc;
     }, {});
 
-    const elementHTML =  routesObject[location.pathname]();
+    const elementHTML = routesObject[location.pathname]();
     document.querySelector('#root').innerHTML = elementHTML;
 
     document.querySelectorAll('.menu').forEach(node => node.addEventListener('click', (e) => {
