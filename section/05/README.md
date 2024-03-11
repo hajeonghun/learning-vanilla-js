@@ -1,4 +1,4 @@
-# CSR Build Tool
+# Build Script 작성
 
 ## 학습 목표
 - 미니 Webpack 구현하기
