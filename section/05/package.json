@@ -1,0 +1,19 @@
+{
+  "name": "05",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "http-server --proxy=http://127.0.0.1:8080/?",
+    "serve": "http-server ./dist",
+    "build:dev": "node buildScript.cjs NODE_ENV=development",
+    "build": "node buildScript.cjs"
+  },
+  "dependencies": {
+    "http-server": "^14.1.1"
+  },
+  "devDependencies": {
+    "terser": "^5.29.1"
+  }
+}
