@@ -8,4 +8,4 @@
   - output
   - uglify
 - 동작방식 이해하기
-- 우리가 만든 build script로 Vercel 배포하기
+- 우리가 만든 build script 로 Vercel 배포하기

@@ -1,7 +1,6 @@
 const argument = process.argv[2];
 const mode = argument?.split('=')[1]; // "NODE_ENV=development" -> ["NODE_ENV", "development"]
 const config = require('./build.config.cjs')(mode);
-const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { minify_sync } = require('terser');
