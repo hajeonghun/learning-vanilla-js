@@ -1,6 +1,6 @@
 let router = [];
 
-const boardList = [
+export let boardList = [
     { id: 1, title: '기존 게시물입니다.' },
     { id: 2, title: '기존 게시물입니다.' },
     { id: 3, title: '기존 게시물입니다.' },
@@ -9,11 +9,11 @@ const boardList = [
     { id: 6, title: '기존 게시물입니다.' },
 ];
 
-const addBoard = () => {
+export const addBoard = () => {
     boardList.push({ id: boardList[boardList.length - 1]?.id + 1, title: '추가 게시물입니다.' });
 };
 
-const removeBoard = () => {
+export const removeBoard = () => {
     boardList.pop();
 };
 
@@ -106,8 +106,17 @@ function main() {
             element: Board,
         },
     ]);
-    router.push('hello');
+
+    setInitServerData();
     render();
+}
+
+function setInitServerData() {
+    if (window.__SSR_DATA__?.path === '/') {
+        // ...
+    } else if (window.__SSR_DATA__?.path === '/board') {
+        boardList = window.__SSR_DATA__.pageProps.boardList;
+    }
 }
 
 if (typeof window !== 'undefined') {
